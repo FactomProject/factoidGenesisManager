@@ -172,6 +172,38 @@ def verify_written_wif(human_private_key, human_public_key, advanced):
             print "should be: " + human_private_key
             raw_input("please try again (press enter when ready or Ctrl+c to exit)")
 
+def validate_private_key(human_private_key, advanced):
+    decoded_key = base58.b58decode(human_private_key.strip())
+
+    if advanced == True:
+        print "Hex decoded private key: " + decoded_key.encode('hex')
+    if len(decoded_key) == 38:
+        key_with_prefix = decoded_key[:34]
+        if advanced == True:
+            print "Private key with prefix: " + key_with_prefix.encode('hex')
+        proper_checksum = hashlib.sha256(hashlib.sha256(key_with_prefix).digest()).digest()
+        if advanced == True:
+            print "Calculated checksum: " + proper_checksum.encode('hex')
+        if proper_checksum[:4] == decoded_key[-4:]:
+            print "The private key entered does not have any typos"
+            privatekey = key_with_prefix[-32:]
+            if advanced == True:
+                print "raw ed25519 private key: " + privatekey.encode('hex')
+            pubkey = privkey_to_pubkey(privatekey, advanced)
+            human_pubkey = pubkey_to_send(pubkey, advanced)
+            print "The public key to send to factom is:"
+            print human_pubkey
+        else:
+            print "are you sure you typed the address correctly?"
+            print "you typed the checksum " + decoded_key[-4:].encode('hex') + " and calculated is " + proper_checksum[:4].encode('hex')
+            return False
+    else: # wrong key length
+        print "are you sure you typed the address correctly?"
+        print "expected decoded key length is 38 bytes but key decoded to length of " + str(len(decoded_key))
+        return False
+    #print key_with_prefix.encode('hex')
+
+
 
 def main():
     print "Factoid Genesis Manager v1.0"
@@ -195,6 +227,9 @@ def main():
         raw_input("\npress enter when done")
     else:
         verify_factoid_private = query_yes_no("Would you like to verify an existing Factoid private key?","yes")
+        if verify_factoid_private == True:
+            entered_private_key = raw_input("Please enter private key starting with Fs: ")
+            validate_private_key(entered_private_key, advanced)
 
 
 if "__main__" == __name__:
