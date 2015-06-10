@@ -19,6 +19,7 @@ from bip32utils.BIP32Key import *
 import ed25519
 import hashlib
 import base58
+import re
 
 # the value 0x6478 specifies a private key for the base58 encoding
 # it results in a string starting with "Fs" for Factoid Secret
@@ -172,8 +173,20 @@ def verify_written_wif(human_private_key, human_public_key, advanced):
             print "should be: " + human_private_key
             raw_input("please try again (press enter when ready or Ctrl+c to exit)")
 
+def onlyB58chars(strg):
+    if re.match("^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$", strg):
+        return True
+    else:
+        return False
+
 def validate_private_key(human_private_key, advanced):
-    decoded_key = base58.b58decode(human_private_key.strip())
+    if onlyB58chars(human_private_key):
+        decoded_key = base58.b58decode(human_private_key.strip())
+    else:
+        print "are you sure you typed the address correctly?"
+        print "The address only can contain 123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz but you typed: "
+        print human_private_key
+        return False
 
     if advanced == True:
         print "Hex decoded private key: " + decoded_key.encode('hex')
@@ -191,8 +204,9 @@ def validate_private_key(human_private_key, advanced):
                 print "raw ed25519 private key: " + privatekey.encode('hex')
             pubkey = privkey_to_pubkey(privatekey, advanced)
             human_pubkey = pubkey_to_send(pubkey, advanced)
-            print "The public key to send to factom is:"
+            print "The public key to send to Factom is:"
             print human_pubkey
+            return True
         else:
             print "are you sure you typed the address correctly?"
             print "you typed the checksum " + decoded_key[-4:].encode('hex') + " and calculated is " + proper_checksum[:4].encode('hex')
@@ -201,9 +215,6 @@ def validate_private_key(human_private_key, advanced):
         print "are you sure you typed the address correctly?"
         print "expected decoded key length is 38 bytes but key decoded to length of " + str(len(decoded_key))
         return False
-    #print key_with_prefix.encode('hex')
-
-
 
 def main():
     print "Factoid Genesis Manager v1.0"
@@ -228,8 +239,12 @@ def main():
     else:
         verify_factoid_private = query_yes_no("Would you like to verify an existing Factoid private key?","yes")
         if verify_factoid_private == True:
-            entered_private_key = raw_input("Please enter private key starting with Fs: ")
-            validate_private_key(entered_private_key, advanced)
+            while True:
+                entered_private_key = raw_input("Please enter private key starting with Fs: ")
+                if validate_private_key(entered_private_key, advanced):
+                    break
+                else:
+                    raw_input("Ctrl+C to quit, Enter to try again")
 
 
 if "__main__" == __name__:
