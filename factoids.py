@@ -2,8 +2,8 @@
 
 # This program generates random Factoid private keys and displays
 # corresponding public keys.  It also allows for checking private keys.
-# It creates Koinify style private keys.  Wallets which support the
-# Factoid Software Sale will be compatible with the words generated
+# It creates Fs.... style private keys.  Wallets which support the
+# Factoid Software Sale will be compatible with the keys generated
 # by this program.
 
 # This software is MIT licensed, Copyright 2015 Factom Foundation.
@@ -12,8 +12,6 @@ import sys
 
 import platform
 import os
-
-# from binascii import hexlify, unhexlify
 from mnemonic import Mnemonic
 from bip32utils.BIP32Key import *
 import ed25519
@@ -104,31 +102,6 @@ def pubkey_to_send(pubkey, advanced):
             display_string += '-'
     return display_string
 
-def verify_written_words(random_seed, advanced):
-    wordmaker = Mnemonic('english')
-    words = wordmaker.to_mnemonic(random_seed)
-
-    while True:
-        if advanced == False:
-            clear_screen()
-        print "Please write down these 12 words: \n"
-        print words
-        print "\nThese make your Master Passphrase.  They are the only way to recover Factoids after Factom launches."
-        print "They also can be used to steal Factoids if they are exposed, so keep them secret."
-
-        if advanced == False:
-            raw_input("Press enter when done writing")
-            clear_screen()
-        written_words = raw_input("Please type the words you wrote: ").lower().strip()
-        if words == written_words:
-            break
-        else:
-            if advanced == False:
-                clear_screen()
-            print "you typed: " + written_words
-            print "should be: " + words
-            raw_input("please try again (press enter when ready or Ctrl+c to exit)")
-
 def private_key_to_human(private_key, advanced):
     hex_seed = private_key.encode('hex')
     private_key_prefix = factoid_secret_key_prefix + hex_seed
@@ -158,7 +131,7 @@ def verify_written_wif(human_private_key, human_public_key, advanced):
         print human_public_key[:8]
         print "The Fs... number is the only way to recover Factoids after Factom launches."
         print "The private key also can be used to steal Factoids if exposed, so keep it secret."
-        print "Capitilization matters."
+        print "Capitalization matters."
 
         if advanced == False:
             raw_input("Press enter when done writing")
@@ -216,6 +189,41 @@ def validate_private_key(human_private_key, advanced):
         print "expected decoded key length is 38 bytes but key decoded to length of " + str(len(decoded_key))
         return False
 
+def verify_koinify_words(words, advanced):
+    if ' ' in words:
+        wordchecker = Mnemonic('english')
+        firstword = words.split(' ')[0]
+        if firstword in wordchecker.wordlist:
+            check = wordchecker.check(words)
+            return check
+        else:
+            return False
+    else:
+        return False
+
+def koinify_words_to_private_key(entered_words, advanced):
+    seed = Mnemonic.to_seed(entered_words, '')
+    rootkey = BIP32Key.fromEntropy(seed, public=False)
+    factoidChildKey = rootkey.ChildKey(BIP32_HARDEN+7)
+    last32 = factoidChildKey.ExtendedKey(private=True, encoded=False)[-32:]
+
+    if advanced == True:
+        print "seed derived from words: " + seed.encode('hex')
+        print "BIP32 root key: " + rootkey.ExtendedKey(private=True, encoded=False).encode('hex')
+        print "BIP32 root of Factoid chain key: " + factoidChildKey.ExtendedKey(private=True, encoded=False).encode('hex')
+        print "Last 32 bytes, ed25519 private key: " + last32.encode('hex')
+    return last32
+
+
+def pubkey_to_opreturn(pubkey, advanced):
+    pubkeyHex = pubkey.encode('hex')
+    opheader = "464143544f4d3030"
+    opdata = opheader + pubkeyHex
+    if advanced == True:
+        print "data encoded in OP_RETURN is: " + opdata
+    return opdata
+
+
 def main():
     print "Factoid Genesis Manager v1.0"
     print "Press Ctrl+c to exit \n"
@@ -242,10 +250,30 @@ def main():
             while True:
                 entered_private_key = raw_input("Please enter private key starting with Fs: ")
                 if validate_private_key(entered_private_key, advanced):
+                    raw_input("\npress enter when done")
                     break
                 else:
                     raw_input("Ctrl+C to quit, Enter to try again")
-
+        else:
+            convert_koinify_words = query_yes_no("Would you like to convert the words from the Koinify wallet to a private key? ","yes")
+            if convert_koinify_words == True:
+                while True:
+                    entered_words = raw_input("Please enter the 12 Koinify words: ")
+                    if verify_koinify_words(entered_words.lower(), advanced):
+                        private_key_from_koinify = koinify_words_to_private_key(entered_words.lower(), advanced)
+                        human_privkey = private_key_to_human(private_key_from_koinify, advanced)
+                        pubkey = privkey_to_pubkey(private_key_from_koinify, advanced)
+                        pubkey_to_opreturn(pubkey, advanced)
+                        print "Private key from the Koinify words: " + human_privkey
+                        sendable_pubkey = pubkey_to_send(pubkey, advanced)
+                        print "Corresponding to public key: " + sendable_pubkey
+                        raw_input("\npress enter when done")
+                        break
+                    else:
+                        print "Something is wrong with these entered words: "
+                        print entered_words.lower()
+                        print "All 12 words should have the same spelling as the english.txt file in the wordlist directory"
+                        raw_input("Ctrl+C to quit, Enter to try again")
 
 if "__main__" == __name__:
         main()
