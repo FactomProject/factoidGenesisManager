@@ -30,7 +30,7 @@ def query_yes_no(question, default="yes"):
     "question" is a string that is presented to the user.
     "default" is the presumed answer if the user just hits <Enter>.
         It must be "yes" (the default), "no" or None (meaning
-        an answer is required of the user).
+        an answer is required of the user).;
 
     The "answer" return value is True for "yes" or False for "no".
     """
@@ -130,7 +130,7 @@ def verify_written_wif(human_private_key, human_public_key, advanced):
         print "\nThis is used to spend funds assigned to the public key starting with:"
         print human_public_key[:8]
         print "The Fs... number is the only way to recover Factoids after Factom launches."
-        print "The private key also can be used to steal Factoids if exposed, so keep it secret."
+        print "The private key also can be used to steal Factoids if exposed, so keep it secret"
         print "Capitalization matters."
 
         if advanced == False:
@@ -241,7 +241,8 @@ def main():
         pubkey = privkey_to_pubkey(private_key, advanced)
         pubkey_human = pubkey_to_send(pubkey, advanced)
         verify_written_wif(human_private_key, pubkey_human, advanced)
-        print "Great!  Now send this 9 segment public key to Factom so that it can be included in the Genesis block:\n"
+        print "Great!  Now send this 9 segment public key to Factom so that it can"
+        print "be included in the Genesis block:\n"
         print pubkey_human
         raw_input("\npress enter when done")
     else:
@@ -272,7 +273,8 @@ def main():
                     else:
                         print "Something is wrong with these entered words: "
                         print entered_words.lower()
-                        print "All 12 words should have the same spelling as the english.txt file in the wordlist directory"
+                        print "All 12 words should have the same spelling as the english.txt file"
+                        print "in the wordlist directory locally or on github"
                         raw_input("Ctrl+C to quit, Enter to try again")
 
 if "__main__" == __name__:
