@@ -56,34 +56,46 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
 def clear_screen():
-        if platform.system() == 'Windows':
-            os.system('cls')
-        else:
-            os.system('clear')
-
-def seed_to_pubkey(random_seed, advanced):
-    rootkey = BIP32Key.fromEntropy(random_seed, public=False)
-    if advanced == True:
-        print "BIP32 root key: " + rootkey.ExtendedKey(private=True, encoded=False).encode('hex')
-    factoidChildKey = rootkey.ChildKey(BIP32_HARDEN+7)
-    if advanced == True:
-        print "BIP32 derived Factoid chain: " + factoidChildKey.ExtendedKey(private=True, encoded=False).encode('hex')
-    last32 = factoidChildKey.ExtendedKey(private=True, encoded=False)[-32:]
-    if advanced == True:
-        print "Last 32 bytes from BIP32 ECDSA private key: " + last32.encode('hex')
-        print "ed25519 Factoid private key: " + last32.encode('hex')
-    pubkey = ed25519.publickey(last32)
-    if advanced == True:
-        print "ed25519 Factoid public key: " + pubkey.encode('hex')
-    return pubkey
+    """
+    this function gets rid of all the characters currently on the screen for readability
+    """
+    
+    if platform.system() == 'Windows':
+        os.system('cls')
+    else:
+        os.system('clear')
 
 def privkey_to_pubkey(privkey, advanced):
+    """
+    this function takes a 32 byte ed25519 private key and returns a 32 byte public key
+    both values are binary encoded
+    In this diagram: http://i.stack.imgur.com/5afWK.png
+    from: http://crypto.stackexchange.com/questions/3596/is-it-possible-to-pick-your-ed25519-public-key
+    takes in the k value and returns the A value
+    The advanced parameter set to true displays technical internal data
+    """
     pubkey = ed25519.publickey(privkey)
     if advanced == True:
         print "ed25519 Factoid public key: " + pubkey.encode('hex')
     return pubkey
 
 def pubkey_to_send(pubkey, advanced):
+    """
+    this function takes a 32 byte ed25519 public key in binary form and
+    returns a string representing the public key in hex form
+    It returns a string that breaks the value to send into 9 segments
+    The string also has a checksum attached to it, so a typo is detectable.
+    For example.  a binary pubkey passed like this :
+    51477815b762e495e0f7deb01fb2969f2e15ba4615fa4a5aafc23ccf5c3c8bd2
+    would return this string:
+
+
+    Note, this function does not reutrn the FA...... style factoid address because the
+    address scheme is not finalized.  The raw ed25519 key is what was committed to in the
+    factoid sale, so this value will match the sale.
+
+    The advanced parameter set to true displays technical internal data
+    """
     pubkeyhash = hashlib.sha256(pubkey).digest()
     if advanced == True:
         print "SHA256 hash of pubkey: " + pubkeyhash.encode('hex')
@@ -103,6 +115,18 @@ def pubkey_to_send(pubkey, advanced):
     return display_string
 
 def private_key_to_human(private_key, advanced):
+    """
+    this function takes a 32 byte ed25519 private key in binary form and
+    returns a string with a human readable private key according to this spec:
+    https://github.com/FactomProject/FactomDocs/blob/master/factomDataStructureDetails.md#factoid-private-keys
+    For example.  a binary private key passed like this :
+    12fab77add10bcabe1b62b3fe8b167e966e4beee38ccf0062fdd207b5906c841
+    would return this string:
+    Fs1Ts7PsKMwo4ftCYxQJ3rW4pLiRBXyGEjMrxtHycLu52aDgKGEy
+
+    The advanced parameter set to true displays technical internal data
+    """
+
     hex_seed = private_key.encode('hex')
     private_key_prefix = factoid_secret_key_prefix + hex_seed
 
@@ -121,7 +145,13 @@ def private_key_to_human(private_key, advanced):
     return human_privkey
 
 def verify_written_wif(human_private_key, human_public_key, advanced):
+    """
+    this function prompts the user to correctly enter the private key and returns
+    true if they correctly typed it
+    It takes in two strings, the Fs... private key and the 9 segment pubkey
 
+    The advanced parameter set to true displays technical internal data
+    """
     while True:
         if advanced == False:
             clear_screen()
@@ -147,12 +177,23 @@ def verify_written_wif(human_private_key, human_public_key, advanced):
             raw_input("please try again (press enter when ready or Ctrl+c to exit)")
 
 def onlyB58chars(strg):
+    """
+    Returns false if the string passed in contains any invalid bitcoin base58 characters.
+    """
     if re.match("^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$", strg):
         return True
     else:
         return False
 
 def validate_private_key(human_private_key, advanced):
+    """
+    This function is intended to doublecheck a private key which was recorded earlier.
+    It takes in the private key the user typed in.
+    It displays the 9 segment public key which corresponds to that private key.
+    It returns false if assorted errors are found.
+
+    The advanced parameter set to true displays technical internal data
+    """
     if onlyB58chars(human_private_key):
         decoded_key = base58.b58decode(human_private_key.strip())
     else:
@@ -189,7 +230,13 @@ def validate_private_key(human_private_key, advanced):
         print "expected decoded key length is 38 bytes but key decoded to length of " + str(len(decoded_key))
         return False
 
-def verify_koinify_words(words, advanced):
+def verify_koinify_words(words):
+    """
+    This function checks to make sure there are multiple words and
+    that the first word is in the english wordlist.
+    Both of these errors would crash the Mnemonic library, so they should be checked before using it.
+    The Mnemonic library checks for other errors.
+    """
     if ' ' in words:
         wordchecker = Mnemonic('english')
         firstword = words.split(' ')[0]
@@ -202,6 +249,14 @@ def verify_koinify_words(words, advanced):
         return False
 
 def koinify_words_to_private_key(entered_words, advanced):
+    """
+    This function takes in a string with 12 words.
+    It returns an ed25519 private key in binary format
+    It uses the same algorithm used in the
+    Koinify wallet during the factoid sale.
+
+    The advanced parameter set to true displays technical internal data
+    """
     seed = Mnemonic.to_seed(entered_words, '')
     rootkey = BIP32Key.fromEntropy(seed, public=False)
     factoidChildKey = rootkey.ChildKey(BIP32_HARDEN+7)
@@ -216,6 +271,13 @@ def koinify_words_to_private_key(entered_words, advanced):
 
 
 def pubkey_to_opreturn(pubkey, advanced):
+    """
+    This function takes in binary 32 byte ed25519 public key
+    It returns a hex encoded string displaying what would have been recorded
+    in the bitcoin blockchain during the Factoid purchase.
+
+    The advanced parameter set to true displays technical internal data
+    """
     pubkeyHex = pubkey.encode('hex')
     opheader = "464143544f4d3030"
     opdata = opheader + pubkeyHex
@@ -225,6 +287,11 @@ def pubkey_to_opreturn(pubkey, advanced):
 
 
 def main():
+
+    if not testvectors():
+        print "Something went terribly wrong.  Do you have all the files?"
+        return False
+
     print "Factoid Genesis Manager v1.0"
     print "Press Ctrl+c to exit \n"
     advanced = query_yes_no("Would you like to see technical details?","yes")
@@ -260,7 +327,7 @@ def main():
             if convert_koinify_words == True:
                 while True:
                     entered_words = raw_input("Please enter the 12 Koinify words: ")
-                    if verify_koinify_words(entered_words.lower(), advanced):
+                    if verify_koinify_words(entered_words.lower()):
                         private_key_from_koinify = koinify_words_to_private_key(entered_words.lower(), advanced)
                         human_privkey = private_key_to_human(private_key_from_koinify, advanced)
                         pubkey = privkey_to_pubkey(private_key_from_koinify, advanced)
@@ -276,6 +343,53 @@ def main():
                         print "All 12 words should have the same spelling as the english.txt file"
                         print "in the wordlist directory locally or on github"
                         raw_input("Ctrl+C to quit, Enter to try again")
+
+
+def testvectors():
+    """
+    This function exercises the libraries and double checks that they are
+    returning expected data.
+    """
+
+    if "51477815b762e495e0f7deb01fb2969f2e15ba4615fa4a5aafc23ccf5c3c8bd2".decode('hex') != \
+            privkey_to_pubkey("12fab77add10bcabe1b62b3fe8b167e966e4beee38ccf0062fdd207b5906c841".decode('hex'), False):
+        return False
+
+    if "51477815-b762e495-e0f7deb0-1fb2969f-2e15ba46-15fa4a5a-afc23ccf-5c3c8bd2-6c4cf980" != \
+            pubkey_to_send("51477815b762e495e0f7deb01fb2969f2e15ba4615fa4a5aafc23ccf5c3c8bd2".decode('hex'), False):
+        return False
+
+    if "Fs1Ts7PsKMwo4ftCYxQJ3rW4pLiRBXyGEjMrxtHycLu52aDgKGEy" != \
+            private_key_to_human("12fab77add10bcabe1b62b3fe8b167e966e4beee38ccf0062fdd207b5906c841".decode('hex'), False):
+        return False
+
+    if not onlyB58chars("Xw1"):
+        return False
+    if onlyB58chars("$"):
+        return False
+
+    if "4f4488c609552caf2c7a508108809518e9a1ab3ae6dc259a1e2e9989d053018d".decode('hex') != \
+            hashlib.sha256(hashlib.sha256("647812fab77add10bcabe1b62b3fe8b167e966e4beee38ccf0062fdd207b5906c841" \
+            .decode('hex')).digest()).digest():
+        return False
+
+    if True != verify_koinify_words("legal winner thank year wave sausage worth useful legal winner thank yellow"):
+        return False
+    if True == verify_koinify_words("legal winner thank year wave sausage worth useful legal winner thank thank"):
+        return False
+    if "878386efb78845b3355bd15ea4d39ef97d179cb712b77d5c12b6be415fffeffe5f377ba02bf3f8544ab800b955e51fbff09828f682052a20faa6addbbddfb096" \
+            .decode('hex') != Mnemonic.to_seed("legal winner thank year wave sausage worth useful legal winner thank yellow", ''):
+        return False
+    if "0488ade4000000000000000000598b4595ea72802756519e65a797234231d7d4f13d650cb06db15957c2368b1b007e56ecf5943d79e1f5f87e11c768253d7f3fcf30ae71335611e366c578b4564e"\
+            .decode('hex') != BIP32Key.fromEntropy("878386efb78845b3355bd15ea4d39ef97d179cb712b77d5c12b6be415fffeffe5f377ba02bf3f8544ab800b955e51fbff09828f682052a20faa6addbbddfb096"\
+            .decode('hex'), public=False).ExtendedKey(private=True, encoded=False):
+        return False
+    if "7999d61b8f5efc24b437244ff82b69ba474deeadbf144421f05d5b4b5ab20a8e".decode('hex') != \
+            koinify_words_to_private_key("legal winner thank year wave sausage worth useful legal winner thank yellow", False):
+        return False
+
+    # everything checks out ok
+    return True
 
 if "__main__" == __name__:
         main()
