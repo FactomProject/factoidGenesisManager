@@ -18,6 +18,7 @@ import ed25519
 import hashlib
 import base58
 import re
+import sys
 
 # the value 0x6478 specifies a private key for the base58 encoding
 # it results in a string starting with "Fs" for Factoid Secret
@@ -59,7 +60,7 @@ def clear_screen():
     """
     this function gets rid of all the characters currently on the screen for readability
     """
-    
+
     if platform.system() == 'Windows':
         os.system('cls')
     else:
@@ -78,6 +79,23 @@ def privkey_to_pubkey(privkey, advanced):
     if advanced == True:
         print "ed25519 Factoid public key: " + pubkey.encode('hex')
     return pubkey
+
+def doublecheck_key_works(privkey, pubkey, advanced):
+    """
+    This function takes in a newly generated private and public key
+    It signs a message and then validates the signature with the key.
+    if the verification fails, it raises an exception and the script stops.
+    """
+    message = "message to sign"
+    signature = ed25519.signature(message, privkey, pubkey)
+    if advanced == True:
+        print "test sig: " + signature.encode('hex')
+    #signaturebad = signature[:1] + 'X' + signature[2:]
+    #signaturebad2 = signature[:-2] + 'X' + signature[-1:]
+    ed25519.checkvalid(signature, message, pubkey)
+    if advanced == True:
+        # if this script got this far, then the signature validated.
+        print "signature good"
 
 def pubkey_to_send(pubkey, advanced):
     """
@@ -217,6 +235,7 @@ def validate_private_key(human_private_key, advanced):
             if advanced == True:
                 print "raw ed25519 private key: " + privatekey.encode('hex')
             pubkey = privkey_to_pubkey(privatekey, advanced)
+            doublecheck_key_works(privatekey, pubkey, advanced)
             human_pubkey = pubkey_to_send(pubkey, advanced)
             print "The public key to send to Factom is:"
             print human_pubkey
@@ -288,12 +307,14 @@ def pubkey_to_opreturn(pubkey, advanced):
 
 def main():
 
+
+    print "Factoid Genesis Manager v1.0"
+    print "Press Ctrl+c to exit \n"
+
     if not testvectors():
         print "Something went terribly wrong.  Do you have all the files?"
         return False
 
-    print "Factoid Genesis Manager v1.0"
-    print "Press Ctrl+c to exit \n"
     advanced = query_yes_no("Would you like to see technical details?","yes")
     if advanced == False:
         clear_screen()
@@ -306,6 +327,7 @@ def main():
             print "Random value is:               " + private_key.encode('hex')
         human_private_key = private_key_to_human(private_key, advanced)
         pubkey = privkey_to_pubkey(private_key, advanced)
+        doublecheck_key_works(private_key, pubkey, advanced)
         pubkey_human = pubkey_to_send(pubkey, advanced)
         verify_written_wif(human_private_key, pubkey_human, advanced)
         print "Great!  Now send this 9 segment public key to Factom so that it can"
@@ -331,6 +353,7 @@ def main():
                         private_key_from_koinify = koinify_words_to_private_key(entered_words.lower(), advanced)
                         human_privkey = private_key_to_human(private_key_from_koinify, advanced)
                         pubkey = privkey_to_pubkey(private_key_from_koinify, advanced)
+                        doublecheck_key_works(private_key_from_koinify, pubkey, advanced)
                         pubkey_to_opreturn(pubkey, advanced)
                         print "Private key from the Koinify words: " + human_privkey
                         sendable_pubkey = pubkey_to_send(pubkey, advanced)
@@ -350,46 +373,65 @@ def testvectors():
     This function exercises the libraries and double checks that they are
     returning expected data.
     """
+    print "Self Checking",
+    print_dot()
 
     if "51477815b762e495e0f7deb01fb2969f2e15ba4615fa4a5aafc23ccf5c3c8bd2".decode('hex') != \
             privkey_to_pubkey("12fab77add10bcabe1b62b3fe8b167e966e4beee38ccf0062fdd207b5906c841".decode('hex'), False):
         return False
+    print_dot()
+
+    doublecheck_key_works("12fab77add10bcabe1b62b3fe8b167e966e4beee38ccf0062fdd207b5906c841".decode('hex'), \
+            "51477815b762e495e0f7deb01fb2969f2e15ba4615fa4a5aafc23ccf5c3c8bd2".decode('hex'), False)
+    print_dot()
 
     if "51477815-b762e495-e0f7deb0-1fb2969f-2e15ba46-15fa4a5a-afc23ccf-5c3c8bd2-6c4cf980" != \
             pubkey_to_send("51477815b762e495e0f7deb01fb2969f2e15ba4615fa4a5aafc23ccf5c3c8bd2".decode('hex'), False):
         return False
+    print_dot()
 
     if "Fs1Ts7PsKMwo4ftCYxQJ3rW4pLiRBXyGEjMrxtHycLu52aDgKGEy" != \
             private_key_to_human("12fab77add10bcabe1b62b3fe8b167e966e4beee38ccf0062fdd207b5906c841".decode('hex'), False):
         return False
+    print_dot()
 
     if not onlyB58chars("Xw1"):
         return False
     if onlyB58chars("$"):
         return False
+    print_dot()
 
     if "4f4488c609552caf2c7a508108809518e9a1ab3ae6dc259a1e2e9989d053018d".decode('hex') != \
             hashlib.sha256(hashlib.sha256("647812fab77add10bcabe1b62b3fe8b167e966e4beee38ccf0062fdd207b5906c841" \
             .decode('hex')).digest()).digest():
         return False
+    print_dot()
 
     if True != verify_koinify_words("legal winner thank year wave sausage worth useful legal winner thank yellow"):
         return False
+    print_dot()
     if True == verify_koinify_words("legal winner thank year wave sausage worth useful legal winner thank thank"):
         return False
+    print_dot()
     if "878386efb78845b3355bd15ea4d39ef97d179cb712b77d5c12b6be415fffeffe5f377ba02bf3f8544ab800b955e51fbff09828f682052a20faa6addbbddfb096" \
             .decode('hex') != Mnemonic.to_seed("legal winner thank year wave sausage worth useful legal winner thank yellow", ''):
         return False
+    print_dot()
     if "0488ade4000000000000000000598b4595ea72802756519e65a797234231d7d4f13d650cb06db15957c2368b1b007e56ecf5943d79e1f5f87e11c768253d7f3fcf30ae71335611e366c578b4564e"\
             .decode('hex') != BIP32Key.fromEntropy("878386efb78845b3355bd15ea4d39ef97d179cb712b77d5c12b6be415fffeffe5f377ba02bf3f8544ab800b955e51fbff09828f682052a20faa6addbbddfb096"\
             .decode('hex'), public=False).ExtendedKey(private=True, encoded=False):
         return False
+    print_dot()
     if "7999d61b8f5efc24b437244ff82b69ba474deeadbf144421f05d5b4b5ab20a8e".decode('hex') != \
             koinify_words_to_private_key("legal winner thank year wave sausage worth useful legal winner thank yellow", False):
         return False
-
+    print("\n")
     # everything checks out ok
     return True
+
+def print_dot():
+    sys.stdout.write('.')
+    sys.stdout.flush()
 
 if "__main__" == __name__:
         main()
