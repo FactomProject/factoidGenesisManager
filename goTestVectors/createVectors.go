@@ -3,7 +3,7 @@ package main
 import "fmt"
 import "encoding/hex"
 import "github.com/tyler-smith/go-bip32"
-import "github.com/dustyburwell/ed25519"
+import "github.com/FactomProject/ed25519"
 //import "crypto/sha512"
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 	var combinedkeys [64]byte // := make([]byte, 64)
 	copy(combinedkeys[:32], last32)
 	
-	pubkey := ed25519.GeneratePublicKey(&combinedkeys)
+	pubkey := ed25519.GetPublicKey(&combinedkeys)
 	fmt.Printf("The public key is: %x\n", pubkey[:32])
 }
 
