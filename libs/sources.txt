@@ -47,6 +47,8 @@ https://github.com/dlitz/python-pbkdf2
 
 ----------------------------------
 
+ed25519djb.py
+was
 ed25519.py
 
 http://ed25519.cr.yp.to/python/ed25519.py

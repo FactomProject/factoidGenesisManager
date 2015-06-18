@@ -9,12 +9,12 @@
 # This software is MIT licensed, Copyright 2015 Factom Foundation.
 
 import sys
-
+sys.path.append('libs')
 import platform
 import os
 from mnemonic import Mnemonic
 from bip32utils.BIP32Key import *
-import ed25519
+import ed25519djb as ed25519
 import hashlib
 import base58
 import re
