@@ -184,7 +184,8 @@ def verify_written_wif(human_private_key, human_public_key, advanced):
         if advanced == False:
             raw_input("Press enter when done writing")
             clear_screen()
-        written_wif = raw_input("Please type the private key you wrote, staring with Fs: ").strip()
+        print "Please type the private key you wrote, staring with"
+        written_wif = raw_input("Fs: ").strip()
         if written_wif == human_private_key:
             break
         else:
