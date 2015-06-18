@@ -315,7 +315,7 @@ def main():
         print "Something went terribly wrong.  Do you have all the files?"
         return False
 
-    advanced = query_yes_no("Would you like to see technical details?","yes")
+    advanced = query_yes_no("Would you like to see technical details?","no")
     if advanced == False:
         clear_screen()
     print ""
