@@ -1,0 +1,7 @@
+SHA256
+a345fffcd568ccfc58287ed5476a2200390d242acefe0c5b743d6a8355f89061  factoidGenesisManager.exe
+36021877b0df964b4033d7f58026d816f113ce1cb9c22f27671722cb82d49efd  factoidGenesisManager_mac_linux.zip
+
+MD5
+78822da53792c4b766d4e8d9752d4592  factoidGenesisManager.exe
+1e801d6130728b4de65318892f510077  factoidGenesisManager_mac_linux.zip
