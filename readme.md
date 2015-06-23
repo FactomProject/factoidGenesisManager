@@ -25,19 +25,29 @@ Browse to https://github.com/FactomProject/factoidGenesisManager and download th
 2. Double click to run factoidGenesisManager.exe. A black terminal window will pop up with questions that can be answered with y or n. 
 3. Write down the Fs... key that looks like `Fs1Ts7PsKMwo4exampLe3rW4pLiRBXyGEjMrxtHycLu52aDgKGEy`.  This is the key which will be imported into a future Factoid wallet.
 4. Type the Fs... key back into the program to confirm you wrote it down correctly.
-5. Send the 9 segment public key to Factom so it can be included in the Genesis block. The 9 segment public key looks like this: `51477815-b762e495-e0f7deb0-eeeeeeee-2e15ba46-15fa4a5a-afc23ccf-5c3c8bd2-6c4cf980`
+5. Send the 9 segment public key to Factom so it can be included in the Genesis block. The 9 segment public key looks like this: `51477815-b762e495-e0f7deb0-eeeeeeee-2e15ba46-15fa4a5a-afc23ccf-5c3c8bd2-6c4cf980`. Email the 9 segment key to brian@factom.org. You will recieve a phone call from someone in the Factom office confirming the first and last segments, so keep it handy before the launch of the genesis block.
 
 ![Windows Terminal](windows_example.png?raw=true)
 
 ## Mac and Linux
 
 1. Download [factoidGenesisManager_mac_linux.zip](https://github.com/FactomProject/factoidGenesisManager/blob/master/factoidGenesisManager_mac_linux.zip?raw=true)
-2. Unzip factoidGenesisManager_mac_linux.zip into a folder.
+2. Unzip factoidGenesisManager_mac_linux.zip into the downloads folder.
+  * Mac users can open the zip file. If you see `How To Run.txt` you have succeeded.
 3. Open a Terminal window and browse to the factoidGenesisManager_mac_linux folder.
-4. Run the program with either `./factoidGenesisManager.py` or `python factoidGenesisManager.py`
+  * With a Mac, do this to accomplish step 3.
+  * In the Spotlight, search for utilities.
+  * Scroll through the results to the Folders section.
+  * Double click on the Utilities folder.
+  * Double click on Terminal to run it.
+  * Type `cd downloads` and press return.
+  * type `cd factoidGenesisManager_mac_linux` and press return.
+4. Run the program by typing `python factoidGenesisManager.py` and pressing return. Follow the directions on screen.
 5. Write down the Fs... key that looks like `Fs1Ts7PsKMwo4exampLe3rW4pLiRBXyGEjMrxtHycLu52aDgKGEy`.  This is the key which will be imported into a future Factoid wallet.
 6. Type the Fs... key back into the program to confirm you wrote it down correctly.
-7. Send the 9 segment public key to Factom so it can be included in the Genesis block. The 9 segment public key looks like this: `51477815-b762e495-e0f7deb0-eeeeeeee-2e15ba46-15fa4a5a-afc23ccf-5c3c8bd2-6c4cf980`
+7. Send the 9 segment public key to Factom so it can be included in the Genesis block. The 9 segment public key looks like this: `51477815-b762e495-e0f7deb0-eeeeeeee-2e15ba46-15fa4a5a-afc23ccf-5c3c8bd2-6c4cf980`. Email the 9 segment key to brian@factom.org. You will recieve a phone call from someone in the Factom office confirming the first and last segments, so keep it handy before the launch of the genesis block.
+
+* If mac users have a broken terminal, you can try the zoc terminal alternative.
 
 ### Offline Usage
 This is an example walk though to generate private keys on an offline computer.
@@ -54,8 +64,9 @@ This is an example walk though to generate private keys on an offline computer.
 10. Browse to the factoidGenesisManager_mac_linux directory `cd factoidGenesisManager_mac_linux`.
 11. Run the program `python factoidGenesisManager.py`.
 12. Follow the directions to create a private and public key.  Write down the Private key.
-13. Write down the 9 segment public key and reenter it onto an online computer.  Send it to Factom to include in the genesis block.
+13. Write down the 9 segment public key and reenter it onto an online computer.
 14. Power off the computer to erase the private key from memory.
+15. On an online computer, send the 9 segment public key to Factom so it can be included in the Genesis block. The 9 segment public key looks like this: `51477815-b762e495-e0f7deb0-eeeeeeee-2e15ba46-15fa4a5a-afc23ccf-5c3c8bd2-6c4cf980`. Email the 9 segment key to brian@factom.org. You will recieve a phone call from someone in the Factom office confirming the first and last segments, so keep it handy before the launch of the genesis block.
 
 ## Notes about keys
 
